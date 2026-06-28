@@ -114,7 +114,11 @@ html, body {
   transition: background 0.15s;
 }
 #browse-btn:hover { background: var(--brand-hover); }
-#drop-zone.has-result #browse-btn { display: none; }
+#drop-zone.has-result #browse-btn {
+  padding: 5px 14px;
+  font-size: 0.78rem;
+  margin-top: 8px;
+}
 
 /* ── Progress ────────────────────────────────────────────────────────────── */
 #progress-wrap {
