@@ -126,7 +126,7 @@ function buildTesseractWorkerBlob(workerSrc, coreJsSrc) {
     .replace(/importScripts\s*\([^)]*corePath[^)]*\);?/g, '/* core inlined */');
 
   const preamble = `
-/* === OFFLINE PREAMBLE (Level One PDF Converter) === */
+/* === OFFLINE PREAMBLE (Level One Markdown Maker) === */
 (function() {
   function _b64ToArr(b64) {
     var raw = atob(b64), buf = new ArrayBuffer(raw.length), view = new Uint8Array(buf);
@@ -242,7 +242,7 @@ async function downloadQuicksand() {
 // ── Main ──────────────────────────────────────────────────────────────────
 
 async function main() {
-  log('\n🔨  Level One PDF Converter — build\n');
+  log('\n🔨  Level One Markdown Maker — build\n');
 
   // 1. Install npm deps
   if (!fs.existsSync(path.join(NM, 'pdfjs-dist'))) {
@@ -320,11 +320,12 @@ async function main() {
 
   // 8. Read source files
   log('\n📝  Reading source files…');
-  const stylesCss   = fs.readFileSync(path.join(SRC, 'styles.css'), 'utf8');
-  const appJs       = fs.readFileSync(path.join(SRC, 'app.js'), 'utf8');
-  const processorJs = fs.readFileSync(path.join(SRC, 'pdfProcessor.js'), 'utf8');
-  const converterJs = fs.readFileSync(path.join(SRC, 'markdownConverter.js'), 'utf8');
-  let   template    = fs.readFileSync(path.join(SRC, 'template.html'), 'utf8');
+  const stylesCss     = fs.readFileSync(path.join(SRC, 'styles.css'), 'utf8');
+  const appJs         = fs.readFileSync(path.join(SRC, 'app.js'), 'utf8');
+  const processorJs   = fs.readFileSync(path.join(SRC, 'pdfProcessor.js'), 'utf8');
+  const converterJs   = fs.readFileSync(path.join(SRC, 'markdownConverter.js'), 'utf8');
+  const htmlConvJs    = fs.readFileSync(path.join(SRC, 'htmlConverter.js'), 'utf8');
+  let   template      = fs.readFileSync(path.join(SRC, 'template.html'), 'utf8');
 
   // 9. Assemble HTML
   log('\n🏗️   Assembling HTML…');
@@ -350,11 +351,12 @@ window.__KOFI_CUP_B64__     = ${jsStr(kofiCupB64)};
     .replace('<!-- INJECT:MARKED -->', `<script>\n${safeInlineJs(markedJs)}\n</script>`)
     .replace('<!-- INJECT:ASSETS -->', assetScript)
     .replace('<!-- INJECT:TESS_MAIN -->', `<script>\n${safeInlineJs(tessMainJs)}\n</script>`)
+    .replace('<!-- INJECT:HTML_CONVERTER -->',     `<script>\n${safeInlineJs(htmlConvJs)}\n</script>`)
     .replace('<!-- INJECT:MARKDOWN_CONVERTER -->', `<script>\n${safeInlineJs(converterJs)}\n</script>`)
     .replace('<!-- INJECT:PDF_PROCESSOR -->',      `<script>\n${safeInlineJs(processorJs)}\n</script>`)
     .replace('<!-- INJECT:APP -->',                `<script>\n${safeInlineJs(appJs)}\n</script>`);
 
-  const outPath = path.join(DIST, 'pdf-to-markdown.html');
+  const outPath = path.join(DIST, 'level-one-markdown-maker.html');
   fs.writeFileSync(outPath, template, 'utf8');
 
   const sizeMB = (fs.statSync(outPath).size / 1024 / 1024).toFixed(1);

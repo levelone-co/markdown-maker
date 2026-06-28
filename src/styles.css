@@ -1,4 +1,4 @@
-/* Level One PDF Converter — styles */
+/* Level One Markdown Maker — styles */
 /* Quicksand @font-face is injected here by build.js */
 
 :root {
@@ -60,17 +60,92 @@ html, body {
 }
 .header h1 span { color: var(--text); font-weight: 400; }
 
-#theme-btn {
-  background: none;
+.header-actions { display: flex; gap: 8px; align-items: center; }
+
+#theme-btn, #info-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
   border: 1px solid var(--border);
-  border-radius: 6px;
+  background: none;
   color: var(--text2);
   cursor: pointer;
-  padding: 5px 10px;
-  font-size: 0.8rem;
-  transition: border-color 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+  font-family: inherit;
+  transition: border-color 0.15s, color 0.15s;
 }
-#theme-btn:hover { border-color: var(--brand); color: var(--brand); }
+#theme-btn:hover, #info-btn:hover { border-color: var(--brand); color: var(--brand); }
+
+/* Dark mode (default): show sun icon (click → go light) */
+.icon-moon { display: none; }
+/* Light mode: swap to moon icon (click → go dark) */
+body.light .icon-moon { display: block; }
+body.light .icon-sun  { display: none; }
+
+/* ── Info modal ──────────────────────────────────────────────────────────── */
+#info-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+#info-modal.hidden { display: none; }
+#info-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px 24px 20px;
+  max-width: 480px;
+  width: calc(100% - 40px);
+  position: relative;
+}
+#info-card h2 {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: var(--text);
+}
+#info-close {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  background: none;
+  border: none;
+  color: var(--text2);
+  font-size: 1.3rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px 6px;
+}
+#info-close:hover { color: var(--text); }
+.info-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+.info-table td {
+  padding: 7px 8px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  vertical-align: top;
+  line-height: 1.4;
+}
+.info-table tr:last-child td { border-bottom: none; }
+.info-icon { width: 28px; font-size: 1rem; }
+.info-format { font-weight: 700; white-space: nowrap; padding-right: 12px; width: 100px; }
+.info-dim td { color: var(--text2); }
+.info-tagline {
+  margin-top: 16px;
+  font-size: 0.78rem;
+  color: var(--text2);
+  line-height: 1.5;
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+}
 
 /* ── Drop zone ───────────────────────────────────────────────────────────── */
 .drop-wrapper { padding: 20px 20px 0; }

@@ -1,8 +1,8 @@
-// app.js — UI orchestration for Level One PDF Converter
+// app.js — UI orchestration for Level One Markdown Maker
 (function () {
   'use strict';
 
-  const APP_VERSION = '0.1.0';
+  const APP_VERSION = '0.2.0';
 
   // ── DOM refs ──────────────────────────────────────────────────────────────
   const dropZone    = document.getElementById('drop-zone');
@@ -21,6 +21,9 @@
   const btnSplit    = document.getElementById('btn-view-split');
   const toolbar     = document.getElementById('toolbar');
   const themeBtn    = document.getElementById('theme-btn');
+  const infoBtn     = document.getElementById('info-btn');
+  const infoModal   = document.getElementById('info-modal');
+  const infoClose   = document.getElementById('info-close');
   const footerVer   = document.getElementById('footerVersion');
   const kofiCup     = document.getElementById('kofi-cup');
 
@@ -32,17 +35,14 @@
 
   // Set up pdf.js worker from inline blob
   (function initPdfjsWorker() {
-    const workerSrc = window.__PDFJS_WORKER_SRC__;
-    const blob = new Blob([workerSrc], { type: 'application/javascript' });
+    const blob = new Blob([window.__PDFJS_WORKER_SRC__], { type: 'application/javascript' });
     pdfjsLib.GlobalWorkerOptions.workerSrc = URL.createObjectURL(blob);
   })();
 
-  // Set up Tesseract blob URLs from inline data
+  // Set up Tesseract blob URL from inline data
   (function initTesseractUrls() {
-    const workerSrc = window.__TESS_WORKER_SRC__;
-    const blob = new Blob([workerSrc], { type: 'application/javascript' });
+    const blob = new Blob([window.__TESS_WORKER_SRC__], { type: 'application/javascript' });
     window.__TESS_WORKER_URL__ = URL.createObjectURL(blob);
-    // corePath and langPath are handled by the patched worker itself
     window.__TESS_CORE_URL__ = undefined;
     window.__TESS_LANG_URL__ = undefined;
   })();
@@ -55,6 +55,12 @@
     const isLight = document.body.classList.toggle('light');
     localStorage.setItem('lo-theme', isLight ? 'light' : 'dark');
   });
+
+  // ── Info modal ────────────────────────────────────────────────────────────
+  infoBtn.addEventListener('click', () => infoModal.classList.remove('hidden'));
+  infoClose.addEventListener('click', () => infoModal.classList.add('hidden'));
+  infoModal.addEventListener('click', e => { if (e.target === infoModal) infoModal.classList.add('hidden'); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') infoModal.classList.add('hidden'); });
 
   // ── Drag & drop ───────────────────────────────────────────────────────────
   dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
@@ -105,51 +111,68 @@
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = (window.__currentFilename__ || 'document').replace(/\.pdf$/i, '') + '.md';
+    a.download = (window.__currentFilename__ || 'document').replace(/\.[^.]+$/, '') + '.md';
     a.click();
     URL.revokeObjectURL(url);
   });
 
-  // Live preview update as user edits
   mdEditor.addEventListener('input', renderPreview);
 
   // ── Main pipeline ─────────────────────────────────────────────────────────
   let converting = false;
 
+  function classifyFile(file) {
+    const mime = file.type || '';
+    const name = file.name || '';
+    if (mime === 'application/pdf' || /\.pdf$/i.test(name)) return 'pdf';
+    if (mime.startsWith('image/') || /\.(png|jpe?g|webp|tiff?|bmp|gif)$/i.test(name)) return 'image';
+    if (mime === 'text/html' || /\.html?$/i.test(name)) return 'html';
+    return null;
+  }
+
   async function handleFile(file) {
     if (converting) return;
-    if (!file || file.type !== 'application/pdf') {
-      showError('Please drop a PDF file.');
+    const kind = classifyFile(file);
+    if (!kind) {
+      showError('Unsupported file type. Drop a PDF, image, or HTML file.');
       return;
     }
     converting = true;
     window.__currentFilename__ = file.name;
-
-    showProgress('Loading PDF…', 0);
     outputArea.classList.add('hidden');
     toolbar.classList.add('hidden');
 
     try {
-      const arrayBuffer = await file.arrayBuffer();
-      const pdfDoc = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-      const total = pdfDoc.numPages;
+      let markdown;
 
-      let pagesProcessed = 0;
-      const onProgress = ({ phase, page, total: t, progress }) => {
-        const tot = t || total;
-        if (phase === 'extract') showProgress(`Extracting page ${page} / ${tot}…`, page / tot * 50);
-        if (phase === 'ocr')     showProgress(`OCR page ${page} / ${tot}… ${progress ? Math.round(progress * 100) + '%' : ''}`, (page - 1) / tot * 50 + 25);
-        if (phase === 'done-page') {
-          pagesProcessed++;
-          showProgress(`Processed ${pagesProcessed} / ${tot} pages…`, 50 + pagesProcessed / tot * 45);
-        }
-      };
+      if (kind === 'pdf') {
+        showProgress('Loading PDF…', 0);
+        const arrayBuffer = await file.arrayBuffer();
+        const pdfDoc = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        const total = pdfDoc.numPages;
+        let done = 0;
+        const onProgress = ({ phase, page, total: t, progress }) => {
+          const tot = t || total;
+          if (phase === 'extract') showProgress(`Extracting page ${page} / ${tot}…`, page / tot * 50);
+          if (phase === 'ocr')     showProgress(`OCR page ${page} / ${tot}… ${progress ? Math.round(progress * 100) + '%' : ''}`, (page - 1) / tot * 50 + 25);
+          if (phase === 'done-page') { done++; showProgress(`Processed ${done} / ${tot} pages…`, 50 + done / tot * 45); }
+        };
+        showProgress('Extracting text…', 5);
+        const items = await PdfProcessor.processPDF(pdfDoc, onProgress);
+        showProgress('Converting to Markdown…', 96);
+        markdown = MarkdownConverter.convertToMarkdown(items, total);
 
-      showProgress('Extracting text…', 5);
-      const items = await PdfProcessor.processPDF(pdfDoc, onProgress);
+      } else if (kind === 'image') {
+        showProgress('Starting OCR…', 5);
+        const items = await PdfProcessor.ocrImage(file, p => showProgress(`OCR… ${Math.round(p * 100)}%`, 5 + p * 88));
+        showProgress('Converting to Markdown…', 96);
+        markdown = MarkdownConverter.convertToMarkdown(items, 1);
 
-      showProgress('Converting to Markdown…', 96);
-      const markdown = MarkdownConverter.convertToMarkdown(items, total);
+      } else if (kind === 'html') {
+        showProgress('Converting HTML…', 20);
+        markdown = await HtmlConverter.convertHtml(file);
+        showProgress('Done.', 100);
+      }
 
       displayMarkdown(markdown);
     } catch (err) {
@@ -187,6 +210,7 @@
     progressWrap.classList.remove('hidden');
     progressLbl.textContent = '⚠ ' + msg;
     progressBar.style.width = '0%';
+    converting = false;
   }
 
 })();

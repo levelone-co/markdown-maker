@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Level One PDF Converter</title>
-  <meta name="description" content="Offline, air-gapped PDF to Markdown converter">
+  <title>Level One Markdown Maker</title>
+  <meta name="description" content="Convert files to Markdown for cheaper AI context — offline, air-gapped">
   <style>
     /* INJECT:FONTS */
     /* INJECT:STYLES */
@@ -15,18 +15,24 @@
 
   <!-- Header -->
   <header class="header">
-    <h1>Level One <span>PDF Converter</span></h1>
-    <button id="theme-btn" title="Toggle light/dark">Light / Dark</button>
+    <h1>Level One <span>Markdown Maker</span></h1>
+    <div class="header-actions">
+      <button id="theme-btn" title="Toggle light/dark">
+        <svg class="icon-sun" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        <svg class="icon-moon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+      <button id="info-btn" title="What can I convert?">?</button>
+    </div>
   </header>
 
   <!-- Drop zone -->
   <div class="drop-wrapper">
     <div id="drop-zone">
       <div class="drop-icon">📄</div>
-      <div class="drop-label">Drop a PDF here or click to browse</div>
-      <div class="drop-sub">Text-based and scanned PDFs both supported — OCR is built in, no internet needed</div>
-      <button id="browse-btn">Browse PDF</button>
-      <input id="file-input" type="file" accept=".pdf,application/pdf" style="display:none">
+      <div class="drop-label">Drop a file here or click to browse</div>
+      <div class="drop-sub">Convert files to Markdown for cheaper AI context</div>
+      <button id="browse-btn">Browse file</button>
+      <input id="file-input" type="file" accept=".pdf,application/pdf,image/*,.html,.htm,text/html" style="display:none">
     </div>
   </div>
 
@@ -64,7 +70,7 @@
   <footer class="footer">
     by <a href="https://www.levelone.co.za" target="_blank" rel="noopener">levelone.co.za</a>
     <span class="sep">|</span>
-    <a id="footerVersion" href="https://github.com/levelone-co/level-one-pdf-converter" target="_blank" rel="noopener"></a>
+    <a id="footerVersion" href="https://github.com/levelone-co/level-one-markdown-maker" target="_blank" rel="noopener"></a>
     <div class="btn-container">
       <a class="kofi-button" href="https://ko-fi.com/H2H71XAPZJ" target="_blank" rel="noopener">
         <img id="kofi-cup" class="kofiimg" src="" alt="">Click here to buy me a coffee
@@ -74,10 +80,28 @@
 
 </div>
 
+<!-- Info modal -->
+<div id="info-modal" class="hidden">
+  <div id="info-card">
+    <button id="info-close" aria-label="Close">×</button>
+    <h2>What can I convert?</h2>
+    <table class="info-table">
+      <tr><td class="info-icon">✅</td><td class="info-format">PDF</td><td>Text extraction + OCR for scanned pages</td></tr>
+      <tr><td class="info-icon">✅</td><td class="info-format">Images</td><td>PNG, JPG, WEBP, TIFF and others via OCR</td></tr>
+      <tr><td class="info-icon">✅</td><td class="info-format">HTML</td><td>Markup stripped, structure preserved</td></tr>
+      <tr class="info-dim"><td class="info-icon">ℹ</td><td class="info-format">DOCX&nbsp;/ XLSX</td><td>Most AI tools accept these natively — no conversion needed</td></tr>
+      <tr class="info-dim"><td class="info-icon">ℹ</td><td class="info-format">CSV&nbsp;/ TXT</td><td>Already plain text — no conversion needed</td></tr>
+      <tr class="info-dim"><td class="info-icon">🔜</td><td class="info-format">PPTX</td><td>Not yet supported</td></tr>
+    </table>
+    <p class="info-tagline">Markdown is typically 60–80% fewer tokens than raw file content — great for cheaper AI context.</p>
+  </div>
+</div>
+
 <!-- INJECT:PDFJS -->
 <!-- INJECT:MARKED -->
 <!-- INJECT:ASSETS -->
 <!-- INJECT:TESS_MAIN -->
+<!-- INJECT:HTML_CONVERTER -->
 <!-- INJECT:MARKDOWN_CONVERTER -->
 <!-- INJECT:PDF_PROCESSOR -->
 <!-- INJECT:APP -->
