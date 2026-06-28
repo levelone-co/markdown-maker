@@ -1,0 +1,13 @@
+{
+  "name": "level-one-pdf-converter",
+  "version": "0.1.0",
+  "description": "Offline, air-gapped PDF to Markdown converter — single HTML file",
+  "scripts": {
+    "build": "node build.js"
+  },
+  "devDependencies": {
+    "pdfjs-dist": "^4.10.38",
+    "tesseract.js": "^5.1.1",
+    "marked": "^12.0.0"
+  }
+}
