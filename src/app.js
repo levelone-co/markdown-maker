@@ -2,7 +2,7 @@
 (function () {
   'use strict';
 
-  const APP_VERSION = '0.2.0';
+  const APP_VERSION = '0.3.0';
 
   // ── DOM refs ──────────────────────────────────────────────────────────────
   const dropZone    = document.getElementById('drop-zone');
@@ -26,6 +26,12 @@
   const infoClose   = document.getElementById('info-close');
   const footerVer   = document.getElementById('footerVersion');
   const kofiCup     = document.getElementById('kofi-cup');
+  const urlInput    = document.getElementById('url-input');
+  const urlBtn      = document.getElementById('url-btn');
+  const htmlPaste   = document.getElementById('html-paste');
+  const pasteBtn    = document.getElementById('paste-btn');
+  const updateToast = document.getElementById('update-toast');
+  const updateBtn   = document.getElementById('update-refresh');
 
   // ── Init ──────────────────────────────────────────────────────────────────
   footerVer.textContent = `v${APP_VERSION}`;
@@ -76,6 +82,11 @@
     if (fileInput.files[0]) handleFile(fileInput.files[0]);
     fileInput.value = '';
   });
+
+  // ── URL + paste-HTML input ──────────────────────────────────────────────────
+  urlBtn.addEventListener('click', () => handleUrl(urlInput.value.trim()));
+  urlInput.addEventListener('keydown', e => { if (e.key === 'Enter') handleUrl(urlInput.value.trim()); });
+  pasteBtn.addEventListener('click', () => handlePastedHtml(htmlPaste.value));
 
   // ── View toggles ──────────────────────────────────────────────────────────
   function setView(mode) {
@@ -183,6 +194,54 @@
     }
   }
 
+  async function handleUrl(url) {
+    if (converting || !url) return;
+    if (!/^https?:\/\//i.test(url)) { showError('Enter a full URL starting with http:// or https://'); return; }
+    converting = true;
+    outputArea.classList.add('hidden');
+    toolbar.classList.add('hidden');
+    try {
+      window.__currentFilename__ = (url.split('/').filter(Boolean).pop() || 'page').replace(/[?#].*$/, '');
+      showProgress('Fetching URL…', 20);
+      let res;
+      try {
+        res = await fetch(url);
+      } catch (e) {
+        throw new Error('CORS');
+      }
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const html = await res.text();
+      showProgress('Converting HTML…', 70);
+      const markdown = HtmlConverter.convertHtmlString(html);
+      displayMarkdown(markdown);
+    } catch (err) {
+      if (err.message === 'CORS') {
+        showError("Couldn't fetch that URL — the site blocks cross-origin requests. Open the page, copy its HTML source, and use “Paste HTML source instead”.");
+      } else {
+        showError('Could not fetch URL: ' + err.message);
+      }
+    } finally {
+      converting = false;
+    }
+  }
+
+  function handlePastedHtml(html) {
+    if (converting || !html.trim()) return;
+    converting = true;
+    outputArea.classList.add('hidden');
+    toolbar.classList.add('hidden');
+    try {
+      window.__currentFilename__ = 'pasted';
+      showProgress('Converting HTML…', 50);
+      const markdown = HtmlConverter.convertHtmlString(html);
+      displayMarkdown(markdown);
+    } catch (err) {
+      showError('Conversion failed: ' + err.message);
+    } finally {
+      converting = false;
+    }
+  }
+
   function displayMarkdown(markdown) {
     mdEditor.value = markdown;
     renderPreview();
@@ -211,6 +270,31 @@
     progressLbl.textContent = '⚠ ' + msg;
     progressBar.style.width = '0%';
     converting = false;
+  }
+
+  // ── Service worker (PWA) — only when hosted, never from file:// ─────────────
+  if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+    navigator.serviceWorker.register('sw.js').then(reg => {
+      reg.addEventListener('updatefound', () => {
+        const nw = reg.installing;
+        if (!nw) return;
+        nw.addEventListener('statechange', () => {
+          // A new worker is installed and an old one already controls the page → update available
+          if (nw.state === 'installed' && navigator.serviceWorker.controller) {
+            updateToast.classList.remove('hidden');
+            updateBtn.onclick = () => {
+              if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+              updateToast.classList.add('hidden');
+            };
+          }
+        });
+      });
+    }).catch(() => { /* SW optional; ignore */ });
+
+    let reloaded = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (!reloaded) { reloaded = true; location.reload(); }
+    });
   }
 
 })();

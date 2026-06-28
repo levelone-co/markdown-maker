@@ -1,5 +1,5 @@
-// htmlConverter.js — converts an HTML file directly to a Markdown string
-// Exposes: window.HtmlConverter = { convertHtml }
+// htmlConverter.js — converts HTML (file, string, or fetched URL) to a Markdown string
+// Exposes: window.HtmlConverter = { convertHtml, convertHtmlString }
 // No external dependencies — uses the browser's built-in DOMParser.
 
 (function (root) {
@@ -8,16 +8,20 @@
   const BLOCK_SKIP = ['script', 'style', 'nav', 'aside', 'noscript', 'iframe',
                       'form', 'template', 'svg', 'canvas'];
 
+  // Core: HTML string → Markdown string (synchronous)
+  function convertHtmlString(htmlText) {
+    const doc = new DOMParser().parseFromString(htmlText, 'text/html');
+    BLOCK_SKIP.forEach(tag => doc.querySelectorAll(tag).forEach(el => el.remove()));
+    const md = blockToMd(doc.body || doc.documentElement);
+    return md.replace(/\n{3,}/g, '\n\n').trim();
+  }
+
   function convertHtml(file) {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = e => {
-        try {
-          const doc = new DOMParser().parseFromString(e.target.result, 'text/html');
-          BLOCK_SKIP.forEach(tag => doc.querySelectorAll(tag).forEach(el => el.remove()));
-          const md = blockToMd(doc.body || doc.documentElement);
-          resolve(md.replace(/\n{3,}/g, '\n\n').trim());
-        } catch (err) { reject(err); }
+        try { resolve(convertHtmlString(e.target.result)); }
+        catch (err) { reject(err); }
       };
       reader.onerror = () => reject(new Error('Could not read file'));
       reader.readAsText(file);
@@ -147,5 +151,5 @@
     }
   }
 
-  root.HtmlConverter = { convertHtml };
+  root.HtmlConverter = { convertHtml, convertHtmlString };
 })(window);

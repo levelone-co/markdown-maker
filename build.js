@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// build.js — assembles dist/pdf-to-markdown.html
+// build.js — assembles dist/markdown-maker.html (single file) and dist/web/ (PWA bundle)
 // Run once with internet; the output works forever offline.
 'use strict';
 
@@ -356,13 +356,44 @@ window.__KOFI_CUP_B64__     = ${jsStr(kofiCupB64)};
     .replace('<!-- INJECT:PDF_PROCESSOR -->',      `<script>\n${safeInlineJs(processorJs)}\n</script>`)
     .replace('<!-- INJECT:APP -->',                `<script>\n${safeInlineJs(appJs)}\n</script>`);
 
-  const outPath = path.join(DIST, 'level-one-markdown-maker.html');
+  // 10a. Standalone single file (open from disk; SW self-disables on file://)
+  const outPath = path.join(DIST, 'markdown-maker.html');
   fs.writeFileSync(outPath, template, 'utf8');
 
+  // 10b. Deployable PWA bundle in dist/web/
+  log('\n📦  Writing PWA bundle (dist/web/)…');
+  const WEB = path.join(DIST, 'web');
+  const ICONS_OUT = path.join(WEB, 'icons');
+  fs.mkdirSync(ICONS_OUT, { recursive: true });
+
+  // index.html (same assembled HTML)
+  fs.writeFileSync(path.join(WEB, 'index.html'), template, 'utf8');
+
+  // sw.js with version stamped into the cache name
+  const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'));
+  const swSrc = fs.readFileSync(path.join(SRC, 'sw.js'), 'utf8')
+    .replace(/__VERSION__/g, pkg.version);
+  fs.writeFileSync(path.join(WEB, 'sw.js'), swSrc, 'utf8');
+
+  // manifest
+  fs.copyFileSync(path.join(SRC, 'manifest.webmanifest'), path.join(WEB, 'manifest.webmanifest'));
+
+  // icons
+  const iconsSrc = path.join(SRC, 'icons');
+  if (fs.existsSync(iconsSrc)) {
+    for (const f of fs.readdirSync(iconsSrc)) {
+      fs.copyFileSync(path.join(iconsSrc, f), path.join(ICONS_OUT, f));
+    }
+  } else {
+    log('  ⚠  src/icons/ not found — PWA icons will be missing.');
+  }
+
   const sizeMB = (fs.statSync(outPath).size / 1024 / 1024).toFixed(1);
-  log(`\n✅  Built: ${outPath}`);
-  log(`    Size: ${sizeMB} MB`);
-  log('\n📌  To use: open dist/pdf-to-markdown.html in any browser — no server needed.\n');
+  log(`\n✅  Built:`);
+  log(`    Single file : ${outPath} (${sizeMB} MB)`);
+  log(`    PWA bundle  : ${WEB}/  (deploy this folder)`);
+  log('\n📌  Single file: open dist/markdown-maker.html — no server needed.');
+  log('📌  Hosted PWA:  npx wrangler pages deploy dist/web --project-name markdown-maker\n');
 }
 
 main().catch(err => { console.error('\n❌ Build failed:', err.message); process.exit(1); });

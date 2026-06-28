@@ -1,7 +1,7 @@
 {
-  "name": "level-one-pdf-converter",
-  "version": "0.1.0",
-  "description": "Offline, air-gapped PDF to Markdown converter — single HTML file",
+  "name": "markdown-maker",
+  "version": "0.3.0",
+  "description": "Offline, installable Markdown Maker — convert PDF, image, HTML & URLs to Markdown",
   "scripts": {
     "build": "node build.js"
   },

@@ -1,0 +1,13 @@
+{
+  "name": "Markdown Maker",
+  "short_name": ".md Maker",
+  "description": "Convert PDF, image, HTML and URLs to clean Markdown — cheaper AI context. Offline, private, installable.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#121218",
+  "theme_color": "#121218",
+  "icons": [
+    { "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
