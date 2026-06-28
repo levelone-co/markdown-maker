@@ -21,6 +21,21 @@ const NM   = path.join(ROOT, 'node_modules');
 
 function log(msg) { process.stdout.write(msg + '\n'); }
 
+// JSON.stringify safe for embedding inside HTML <script> blocks.
+// The HTML parser terminates a script block on any </script (case-insensitive),
+// so we must escape every </ sequence inside string literals.
+function jsStr(value) {
+  return JSON.stringify(value).replace(/<\//g, '<\\/');
+}
+
+// Safe for directly-inlining JS source inside a <script> block.
+// Only escapes </script (case-insensitive) — the exact sequence the HTML parser
+// uses to close a script block. Replacing all </ would break regex literals like
+// /^</.test(x) by extending them into surrounding code.
+function safeInlineJs(src) {
+  return src.replace(/<\/script/gi, '<\\/script');
+}
+
 function download(url, dest) {
   return new Promise((resolve, reject) => {
     if (fs.existsSync(dest)) { log(`  cached: ${path.basename(dest)}`); return resolve(); }
@@ -314,41 +329,30 @@ async function main() {
   // 9. Assemble HTML
   log('\n🏗️   Assembling HTML…');
 
-  const assetScript = `<script>
-window.__WASM_B64__         = ${JSON.stringify(wasmB64)};
-window.__LANG_B64__         = ${JSON.stringify(langB64)};
-window.__TESS_WORKER_SRC__  = ${JSON.stringify(tessWorkerBlob)};
-window.__PDFJS_WORKER_SRC__ = ${JSON.stringify(pdfWorkerJs)};
-window.__KOFI_CUP_B64__     = ${JSON.stringify(kofiCupB64)};
-// Expose WASM/lang to the tesseract worker global before it initialises
-// (the patched worker reads self.__WASM_B64__ / self.__LANG_B64__ via postMessage piggyback)
-</script>`;
-
-  // Inject the WASM/lang into the tesseract worker via a wrapper that passes them
-  // as properties on self before the blob's preamble runs.
-  // We achieve this by wrapping the worker creation in app.js:
-  // the blob starts with: self.__WASM_B64__ = '...'; self.__LANG_B64__ = '...';
-  // Prepend these to the worker src at assembly time so they're guaranteed first.
-  const selfInject = `self.__WASM_B64__=${JSON.stringify(wasmB64)};\nself.__LANG_B64__=${JSON.stringify(langB64)};\n`;
+  // Self-inject: WASM/lang base64 prepended into the worker blob so it runs first.
+  // Uses jsStr so the inner JSON string literals don't clash with the outer JS.
+  // (base64 chars are A-Za-z0-9+/= so no </script risk, but we use jsStr to be consistent)
+  const selfInject = `self.__WASM_B64__=${jsStr(wasmB64)};\nself.__LANG_B64__=${jsStr(langB64)};\n`;
   const finalWorkerSrc = selfInject + tessWorkerBlob;
 
-  // Re-write asset script with corrected worker (self.__WASM_B64__ already in blob)
-  const assetScript2 = `<script>
-window.__TESS_WORKER_SRC__  = ${JSON.stringify(finalWorkerSrc)};
-window.__PDFJS_WORKER_SRC__ = ${JSON.stringify(pdfWorkerJs)};
-window.__KOFI_CUP_B64__     = ${JSON.stringify(kofiCupB64)};
+  // Asset script: all large strings use jsStr() to prevent </script> from terminating the block.
+  const assetScript = `<script>
+window.__TESS_WORKER_SRC__  = ${jsStr(finalWorkerSrc)};
+window.__PDFJS_WORKER_SRC__ = ${jsStr(pdfWorkerJs)};
+window.__KOFI_CUP_B64__     = ${jsStr(kofiCupB64)};
 </script>`;
 
   template = template
     .replace('/* INJECT:FONTS */',   fontCss)
     .replace('/* INJECT:STYLES */',  stylesCss)
-    .replace('<!-- INJECT:PDFJS -->',  `<script>\n${pdfMainJs}\n</script>`)
-    .replace('<!-- INJECT:MARKED -->', `<script>\n${markedJs}\n</script>`)
-    .replace('<!-- INJECT:ASSETS -->', assetScript2)
-    .replace('<!-- INJECT:TESS_MAIN -->', `<script>\n${tessMainJs}\n</script>`)
-    .replace('<!-- INJECT:MARKDOWN_CONVERTER -->', `<script>\n${converterJs}\n</script>`)
-    .replace('<!-- INJECT:PDF_PROCESSOR -->',      `<script>\n${processorJs}\n</script>`)
-    .replace('<!-- INJECT:APP -->',                `<script>\n${appJs}\n</script>`);
+    // safeInlineJs() escapes any </ inside directly-injected JS source
+    .replace('<!-- INJECT:PDFJS -->',  `<script>\n${safeInlineJs(pdfMainJs)}\n</script>`)
+    .replace('<!-- INJECT:MARKED -->', `<script>\n${safeInlineJs(markedJs)}\n</script>`)
+    .replace('<!-- INJECT:ASSETS -->', assetScript)
+    .replace('<!-- INJECT:TESS_MAIN -->', `<script>\n${safeInlineJs(tessMainJs)}\n</script>`)
+    .replace('<!-- INJECT:MARKDOWN_CONVERTER -->', `<script>\n${safeInlineJs(converterJs)}\n</script>`)
+    .replace('<!-- INJECT:PDF_PROCESSOR -->',      `<script>\n${safeInlineJs(processorJs)}\n</script>`)
+    .replace('<!-- INJECT:APP -->',                `<script>\n${safeInlineJs(appJs)}\n</script>`);
 
   const outPath = path.join(DIST, 'pdf-to-markdown.html');
   fs.writeFileSync(outPath, template, 'utf8');
