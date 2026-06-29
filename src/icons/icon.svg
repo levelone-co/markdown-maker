@@ -2,7 +2,6 @@
   <!-- Full-bleed background (safe for maskable; glyph sits within central 80%) -->
   <rect width="512" height="512" fill="#6c63ff"/>
   <g fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-weight="700" text-anchor="middle">
-    <text x="256" y="250" font-size="200">M</text>
-    <text x="256" y="380" font-size="130">&#8595;</text>
+    <text x="256" y="290" font-size="180">.md</text>
   </g>
 </svg>

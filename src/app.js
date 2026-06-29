@@ -213,10 +213,14 @@
       const html = await res.text();
       showProgress('Converting HTML…', 70);
       const markdown = HtmlConverter.convertHtmlString(html);
+      if (!markdown || markdown.trim().length < 20) {
+        showError('Nothing useful extracted from that URL. The site may block scraping. Right-click the page → View Page Source, copy all, and use “Paste URL HTML source instead”.');
+        return;
+      }
       displayMarkdown(markdown);
     } catch (err) {
       if (err.message === 'CORS') {
-        showError("Couldn't fetch that URL — the site blocks cross-origin requests. Open the page, copy its HTML source, and use “Paste HTML source instead”.");
+        showError('Couldn\'t fetch that URL — the site blocks cross-origin requests. Right-click the page in your browser → View Page Source, copy all, and use “Paste URL HTML source instead”.');
       } else {
         showError('Could not fetch URL: ' + err.message);
       }
