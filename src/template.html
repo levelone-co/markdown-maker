@@ -17,7 +17,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content=".md Maker">
   <link rel="apple-touch-icon" href="icons/icon.svg">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2032%2032'%3E%3Crect%20width='32'%20height='32'%20rx='7'%20fill='%236c63ff'/%3E%3Ctext%20x='16'%20y='22'%20font-family='Arial,sans-serif'%20font-size='16'%20font-weight='bold'%20fill='white'%20text-anchor='middle'%3EM%3C/text%3E%3C/svg%3E">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2032%2032'%3E%3Crect%20width='32'%20height='32'%20rx='7'%20fill='%236c63ff'/%3E%3Ctext%20x='16'%20y='21'%20font-family='Arial,sans-serif'%20font-size='11'%20font-weight='bold'%20fill='white'%20text-anchor='middle'%3E.md%3C/text%3E%3C/svg%3E">
   <style>
     /* INJECT:FONTS */
     /* INJECT:STYLES */
@@ -33,6 +33,18 @@
       <div class="tagline">Cleaner context, cheaper AI.</div>
     </div>
     <div class="header-actions">
+      <div class="dl-wrap">
+        <a id="dl-btn" href="./index.html" download="markdown-maker.html">
+          <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        </a>
+        <div class="dl-tooltip">
+          <div class="dl-tip-title">↓ Download standalone file</div>
+          <div class="dl-tip-body">Single .html file — works in any browser, no install, no server, no internet.</div>
+          <div class="dl-tip-divider"></div>
+          <div class="dl-tip-title">Install as PWA</div>
+          <div class="dl-tip-body">Desktop: click the install icon in your address bar.<br>Mobile: Share → Add to Home Screen.</div>
+        </div>
+      </div>
       <button id="theme-btn" title="Toggle light/dark">
         <svg class="icon-sun" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
         <svg class="icon-moon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>

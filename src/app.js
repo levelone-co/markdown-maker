@@ -32,9 +32,11 @@
   const pasteBtn    = document.getElementById('paste-btn');
   const updateToast = document.getElementById('update-toast');
   const updateBtn   = document.getElementById('update-refresh');
+  const dlBtn       = document.getElementById('dl-btn');
 
   // ── Init ──────────────────────────────────────────────────────────────────
   footerVer.textContent = `v${APP_VERSION}`;
+  if (dlBtn && !location.protocol.startsWith('http')) dlBtn.style.display = 'none';
   if (window.__KOFI_CUP_B64__) {
     kofiCup.src = `data:image/png;base64,${window.__KOFI_CUP_B64__}`;
   }
