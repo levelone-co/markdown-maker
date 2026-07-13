@@ -2,7 +2,7 @@
 (function () {
   'use strict';
 
-  const APP_VERSION = '0.4.0';
+  const APP_VERSION = '0.4.1';
 
   // ── DOM refs ──────────────────────────────────────────────────────────────
   const dropZone    = document.getElementById('drop-zone');
@@ -28,8 +28,6 @@
   const kofiCup     = document.getElementById('kofi-cup');
   const urlInput    = document.getElementById('url-input');
   const urlBtn      = document.getElementById('url-btn');
-  const htmlPaste   = document.getElementById('html-paste');
-  const pasteBtn    = document.getElementById('paste-btn');
   const updateToast = document.getElementById('update-toast');
   const updateBtn   = document.getElementById('update-refresh');
   const dlBtn       = document.getElementById('dl-btn');
@@ -88,7 +86,6 @@
   // ── URL + paste-HTML input ──────────────────────────────────────────────────
   urlBtn.addEventListener('click', () => handleUrl(urlInput.value.trim()));
   urlInput.addEventListener('keydown', e => { if (e.key === 'Enter') handleUrl(urlInput.value.trim()); });
-  pasteBtn.addEventListener('click', () => handlePastedHtml(htmlPaste.value));
 
   // ── Paste-to-convert: screenshot → OCR, copied web selection → Markdown ──────
   document.addEventListener('paste', e => {
@@ -105,7 +102,7 @@
     }
 
     // 2. Rich HTML on clipboard → convert — but not while deliberately editing a field
-    //    (so pasting a URL into #url-input or source into #html-paste behaves normally)
+    //    (so pasting a URL into #url-input or editing #md-editor behaves normally)
     if (!inField) {
       const html = cd.getData('text/html');
       if (html && html.trim()) {
@@ -242,13 +239,13 @@
       showProgress('Converting HTML…', 70);
       const markdown = HtmlConverter.convertHtmlString(html);
       if (!markdown || markdown.trim().length < 20) {
-        showError('Nothing useful extracted from that URL. The site may block scraping. Right-click the page → View Page Source, copy all, and use “Paste URL HTML source instead”.');
+        showError('Nothing useful extracted from that URL. The site may block scraping — open the page, select the content, copy it, and paste here (Cmd/Ctrl+V).');
         return;
       }
       displayMarkdown(markdown);
     } catch (err) {
       if (err.message === 'CORS') {
-        showError('Couldn\'t fetch that URL — the site blocks cross-origin requests. Right-click the page in your browser → View Page Source, copy all, and use “Paste URL HTML source instead”.');
+        showError('Couldn\'t fetch that URL — the site blocks cross-origin requests. Open the page, select the content, copy it, and paste here (Cmd/Ctrl+V).');
       } else {
         showError('Could not fetch URL: ' + err.message);
       }

@@ -1,6 +1,6 @@
 {
   "name": "markdown-maker",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Offline, installable Markdown Maker — convert PDF, image, HTML & URLs to Markdown",
   "scripts": {
     "build": "node build.js"

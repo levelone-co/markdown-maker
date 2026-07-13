@@ -59,22 +59,16 @@
     <div id="drop-zone">
       <div class="drop-icon">📄</div>
       <div class="drop-label">Drop a file here or click to browse</div>
-      <div class="drop-sub">Convert files to Markdown for cheaper AI context<br>…or paste a screenshot or copied web page anywhere</div>
+      <div class="drop-sub">Convert to Markdown for cheaper AI context — or paste a screenshot or copied web page anywhere</div>
       <button id="browse-btn">Browse file</button>
       <input id="file-input" type="file" accept=".pdf,application/pdf,image/*,.html,.htm,text/html" style="display:none">
     </div>
 
-    <!-- URL / paste-HTML input -->
+    <!-- URL input -->
     <div id="url-row">
       <input id="url-input" type="url" placeholder="…or paste a web page URL (https://…)" autocomplete="off" spellcheck="false">
       <button id="url-btn">Convert URL</button>
     </div>
-    <details id="paste-details">
-      <summary>Paste URL HTML source instead</summary>
-      <p class="paste-hint">If a URL won't fetch (most sites block cross-origin requests), open the page in your browser, right-click anywhere → <strong>View Page Source</strong>, select all, copy, and paste it here.</p>
-      <textarea id="html-paste" spellcheck="false" placeholder="<html>…paste page source…</html>"></textarea>
-      <button id="paste-btn">Convert pasted HTML</button>
-    </details>
   </div>
 
   <!-- Progress -->
