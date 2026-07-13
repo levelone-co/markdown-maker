@@ -1,6 +1,6 @@
 {
   "name": "markdown-maker",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Offline, installable Markdown Maker — convert PDF, image, HTML & URLs to Markdown",
   "scripts": {
     "build": "node build.js"
@@ -8,6 +8,7 @@
   "devDependencies": {
     "pdfjs-dist": "^3.11.174",
     "tesseract.js": "^5.1.1",
-    "marked": "^12.0.0"
+    "marked": "^12.0.0",
+    "katex": "^0.16.11"
   }
 }

@@ -72,6 +72,24 @@ function nmFile(pkg, ...candidates) {
   throw new Error(`Cannot find ${pkg}: tried ${candidates.join(', ')}`);
 }
 
+// Read KaTeX CSS and inline its fonts as base64 data URIs. Keeps only woff2
+// (dropping woff/ttf fallbacks) so the bundle stays air-gapped and small —
+// same approach as the Quicksand embed in downloadQuicksand().
+function buildKatexCss() {
+  const distDir = path.join(NM, 'katex', 'dist');
+  let css = fs.readFileSync(path.join(distDir, 'katex.min.css'), 'utf8');
+  // Drop the woff and ttf fallback sources; we embed only woff2.
+  css = css
+    .replace(/,\s*url\(fonts\/[^)]+\.woff\)\s*format\("woff"\)/g, '')
+    .replace(/,\s*url\(fonts\/[^)]+\.ttf\)\s*format\("truetype"\)/g, '');
+  // Embed each remaining woff2 font as a data URI.
+  css = css.replace(/url\(fonts\/([^)]+\.woff2)\)/g, (_m, fname) => {
+    const b64 = toB64(fs.readFileSync(path.join(distDir, 'fonts', fname)));
+    return `url(data:font/woff2;base64,${b64})`;
+  });
+  return css;
+}
+
 // Find the Tesseract core WASM JS wrapper and binary
 function findTesseractCore() {
   // tesseract.js ships its core as 'tesseract.js-core' (files at package root)
@@ -282,7 +300,12 @@ async function main() {
     'lib/marked.esm.js'
   ), 'utf8');
 
-  log('  pdf.js, tesseract.js, marked — found');
+  // KaTeX: core + auto-render extension (renders $…$ / $$…$$ in the preview).
+  const katexJs         = fs.readFileSync(nmFile('katex', 'dist/katex.min.js'), 'utf8');
+  const katexAutoRender = fs.readFileSync(nmFile('katex', 'dist/contrib/auto-render.min.js'), 'utf8');
+  const katexCss        = buildKatexCss();
+
+  log('  pdf.js, tesseract.js, marked, katex — found');
 
   // 3. Find Tesseract core
   log('\n🧠  Locating Tesseract WASM core…');
@@ -343,18 +366,27 @@ window.__PDFJS_WORKER_SRC__ = ${jsStr(pdfWorkerJs)};
 window.__KOFI_CUP_B64__     = ${jsStr(kofiCupB64)};
 </script>`;
 
+  // CRITICAL: every injection uses a replacement *function* (() => value).
+  // With a replacement STRING, String.prototype.replace interprets $$, $&, $`,
+  // $' and $n specially — e.g. a literal `$'` inside injected JS source (such as
+  // KaTeX's `left: '$'` delimiter) would splice in the text following the match,
+  // corrupting the script and breaking it at parse time. Function replacements
+  // insert the value verbatim, immune to any `$` sequences in the source.
+  const inlineScript = src => () => `<script>\n${safeInlineJs(src)}\n</script>`;
   template = template
-    .replace('/* INJECT:FONTS */',   fontCss)
-    .replace('/* INJECT:STYLES */',  stylesCss)
-    // safeInlineJs() escapes any </ inside directly-injected JS source
-    .replace('<!-- INJECT:PDFJS -->',  `<script>\n${safeInlineJs(pdfMainJs)}\n</script>`)
-    .replace('<!-- INJECT:MARKED -->', `<script>\n${safeInlineJs(markedJs)}\n</script>`)
-    .replace('<!-- INJECT:ASSETS -->', assetScript)
-    .replace('<!-- INJECT:TESS_MAIN -->', `<script>\n${safeInlineJs(tessMainJs)}\n</script>`)
-    .replace('<!-- INJECT:HTML_CONVERTER -->',     `<script>\n${safeInlineJs(htmlConvJs)}\n</script>`)
-    .replace('<!-- INJECT:MARKDOWN_CONVERTER -->', `<script>\n${safeInlineJs(converterJs)}\n</script>`)
-    .replace('<!-- INJECT:PDF_PROCESSOR -->',      `<script>\n${safeInlineJs(processorJs)}\n</script>`)
-    .replace('<!-- INJECT:APP -->',                `<script>\n${safeInlineJs(appJs)}\n</script>`);
+    .replace('/* INJECT:FONTS */',   () => fontCss)
+    .replace('/* INJECT:KATEX_CSS */', () => katexCss)
+    .replace('/* INJECT:STYLES */',  () => stylesCss)
+    .replace('<!-- INJECT:PDFJS -->',  inlineScript(pdfMainJs))
+    .replace('<!-- INJECT:MARKED -->', inlineScript(markedJs))
+    .replace('<!-- INJECT:KATEX_JS -->',         inlineScript(katexJs))
+    .replace('<!-- INJECT:KATEX_AUTORENDER -->', inlineScript(katexAutoRender))
+    .replace('<!-- INJECT:ASSETS -->', () => assetScript)
+    .replace('<!-- INJECT:TESS_MAIN -->', inlineScript(tessMainJs))
+    .replace('<!-- INJECT:HTML_CONVERTER -->',     inlineScript(htmlConvJs))
+    .replace('<!-- INJECT:MARKDOWN_CONVERTER -->', inlineScript(converterJs))
+    .replace('<!-- INJECT:PDF_PROCESSOR -->',      inlineScript(processorJs))
+    .replace('<!-- INJECT:APP -->',                inlineScript(appJs));
 
   // 10a. Standalone single file (open from disk; SW self-disables on file://)
   const outPath = path.join(DIST, 'markdown-maker.html');

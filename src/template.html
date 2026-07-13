@@ -20,6 +20,7 @@
   <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2032%2032'%3E%3Crect%20width='32'%20height='32'%20rx='7'%20fill='%236c63ff'/%3E%3Ctext%20x='16'%20y='21'%20font-family='Arial,sans-serif'%20font-size='11'%20font-weight='bold'%20fill='white'%20text-anchor='middle'%3E.md%3C/text%3E%3C/svg%3E">
   <style>
     /* INJECT:FONTS */
+    /* INJECT:KATEX_CSS */
     /* INJECT:STYLES */
   </style>
 </head>
@@ -58,7 +59,7 @@
     <div id="drop-zone">
       <div class="drop-icon">📄</div>
       <div class="drop-label">Drop a file here or click to browse</div>
-      <div class="drop-sub">Convert files to Markdown for cheaper AI context</div>
+      <div class="drop-sub">Convert files to Markdown for cheaper AI context<br>…or paste a screenshot or copied web page anywhere</div>
       <button id="browse-btn">Browse file</button>
       <input id="file-input" type="file" accept=".pdf,application/pdf,image/*,.html,.htm,text/html" style="display:none">
     </div>
@@ -133,6 +134,7 @@
       <tr class="info-dim"><td class="info-icon">ℹ</td><td class="info-format">CSV&nbsp;/ TXT</td><td>Already plain text — no conversion needed</td></tr>
       <tr class="info-dim"><td class="info-icon">🔜</td><td class="info-format">PPTX</td><td>Not yet supported</td></tr>
     </table>
+    <p class="info-paste"><strong>Tip:</strong> paste a screenshot (→ OCR) or a copied web-page selection (→ Markdown) anywhere on the page — no file needed. Maths in <code>$…$</code> renders in the preview.</p>
     <p class="info-tagline">Markdown is typically 60–80% fewer tokens than raw file content — great for cheaper AI context.</p>
   </div>
 </div>
@@ -145,6 +147,8 @@
 
 <!-- INJECT:PDFJS -->
 <!-- INJECT:MARKED -->
+<!-- INJECT:KATEX_JS -->
+<!-- INJECT:KATEX_AUTORENDER -->
 <!-- INJECT:ASSETS -->
 <!-- INJECT:TESS_MAIN -->
 <!-- INJECT:HTML_CONVERTER -->

@@ -182,8 +182,20 @@ body.light .icon-sun  { display: none; }
 .info-icon { width: 28px; font-size: 1rem; }
 .info-format { font-weight: 700; white-space: nowrap; padding-right: 12px; width: 100px; }
 .info-dim td { color: var(--text2); }
+.info-paste {
+  margin-top: 14px;
+  font-size: 0.78rem;
+  color: var(--text2);
+  line-height: 1.5;
+}
+.info-paste code {
+  background: var(--bg3);
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 0.9em;
+}
 .info-tagline {
-  margin-top: 16px;
+  margin-top: 12px;
   font-size: 0.78rem;
   color: var(--text2);
   line-height: 1.5;

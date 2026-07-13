@@ -2,7 +2,7 @@
 (function () {
   'use strict';
 
-  const APP_VERSION = '0.3.2';
+  const APP_VERSION = '0.4.0';
 
   // ── DOM refs ──────────────────────────────────────────────────────────────
   const dropZone    = document.getElementById('drop-zone');
@@ -89,6 +89,32 @@
   urlBtn.addEventListener('click', () => handleUrl(urlInput.value.trim()));
   urlInput.addEventListener('keydown', e => { if (e.key === 'Enter') handleUrl(urlInput.value.trim()); });
   pasteBtn.addEventListener('click', () => handlePastedHtml(htmlPaste.value));
+
+  // ── Paste-to-convert: screenshot → OCR, copied web selection → Markdown ──────
+  document.addEventListener('paste', e => {
+    const cd = e.clipboardData;
+    if (!cd || converting) return;
+    const tag = e.target && e.target.tagName;
+    const inField = tag === 'INPUT' || tag === 'TEXTAREA';
+
+    // 1. Image on clipboard → OCR (allowed anywhere; an image can't live in a text field)
+    const imgItem = Array.from(cd.items || []).find(it => it.type.startsWith('image/'));
+    if (imgItem) {
+      const file = imgItem.getAsFile();
+      if (file) { e.preventDefault(); handleFile(file); return; }
+    }
+
+    // 2. Rich HTML on clipboard → convert — but not while deliberately editing a field
+    //    (so pasting a URL into #url-input or source into #html-paste behaves normally)
+    if (!inField) {
+      const html = cd.getData('text/html');
+      if (html && html.trim()) {
+        e.preventDefault();
+        window.__currentFilename__ = 'pasted';
+        handlePastedHtml(html);
+      }
+    }
+  });
 
   // ── View toggles ──────────────────────────────────────────────────────────
   function setView(mode) {
@@ -262,6 +288,20 @@
       mdPreview.innerHTML = marked.parse(mdEditor.value || '');
     } else {
       mdPreview.textContent = mdEditor.value;
+    }
+    // Typeset math in the preview only — the source markdown keeps its raw $…$ notation.
+    if (typeof renderMathInElement === 'function') {
+      try {
+        renderMathInElement(mdPreview, {
+          delimiters: [
+            { left: '$$', right: '$$', display: true },
+            { left: '$',  right: '$',  display: false },
+            { left: '\\[', right: '\\]', display: true },
+            { left: '\\(', right: '\\)', display: false }
+          ],
+          throwOnError: false
+        });
+      } catch (_) { /* math optional */ }
     }
   }
 
