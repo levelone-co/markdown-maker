@@ -144,7 +144,7 @@ function buildTesseractWorkerBlob(workerSrc, coreJsSrc) {
     .replace(/importScripts\s*\([^)]*corePath[^)]*\);?/g, '/* core inlined */');
 
   const preamble = `
-/* === OFFLINE PREAMBLE (Level One Markdown Maker) === */
+/* === OFFLINE PREAMBLE (The One Level Markdown Maker) === */
 (function() {
   function _b64ToArr(b64) {
     var raw = atob(b64), buf = new ArrayBuffer(raw.length), view = new Uint8Array(buf);
@@ -260,7 +260,7 @@ async function downloadQuicksand() {
 // ── Main ──────────────────────────────────────────────────────────────────
 
 async function main() {
-  log('\n🔨  Level One Markdown Maker — build\n');
+  log('\n🔨  The One Level Markdown Maker — build\n');
 
   // 1. Install npm deps
   if (!fs.existsSync(path.join(NM, 'pdfjs-dist'))) {

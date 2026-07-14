@@ -1,4 +1,4 @@
-// app.js — UI orchestration for Level One Markdown Maker
+// app.js — UI orchestration for The One Level Markdown Maker
 (function () {
   'use strict';
 
